@@ -123,4 +123,9 @@
     <string name="toast_no_calendars_enabled">لم تُختر أي تقاويم بعد</string>
     <string name="toast_alarm_dismissed">تم إيقاف المنبه</string>
 
+    <!-- Experimental Features (NEW) -->
+    <string name="title_experimental_features">ميزات تجريبية</string>
+    <string name="experimental_hint">هذي الميزات قيد التجربة. كل ميزة معطّلة افتراضياً.\nشغّل أي ميزة بالتبديل (toggle).\nلو ميزة سببت مشكلة، أوقفها ويرجع التطبيق لسلوكه الأصلي فوراً.</string>
+    <string name="experimental_no_features_yet">لا توجد ميزات تجريبية متاحة حالياً</string>
+
 </resources>
