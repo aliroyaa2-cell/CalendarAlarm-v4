@@ -80,6 +80,12 @@
             android:label="@string/title_settings"
             android:parentActivityName=".MainActivity" />
 
+        <activity
+            android:name=".ExperimentalFeaturesActivity"
+            android:exported="false"
+            android:label="@string/title_experimental_features"
+            android:parentActivityName=".MainActivity" />
+
         <!-- AlarmOverlayActivity: shown over lock screen -->
         <activity
             android:name=".AlarmOverlayActivity"
