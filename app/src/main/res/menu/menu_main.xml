@@ -17,4 +17,9 @@
         android:title="@string/menu_settings"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_experimental_features"
+        android:title="@string/title_experimental_features"
+        app:showAsAction="never" />
+
 </menu>
