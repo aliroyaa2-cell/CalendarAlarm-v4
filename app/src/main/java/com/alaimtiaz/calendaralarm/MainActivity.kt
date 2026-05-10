@@ -105,6 +105,10 @@ class MainActivity : AppCompatActivity() {
                         }
                         true
                     }
+                    R.id.action_experimental_features -> {
+                        startActivity(Intent(this, ExperimentalFeaturesActivity::class.java))
+                        true
+                    }
                     else -> false
                 }
             }
