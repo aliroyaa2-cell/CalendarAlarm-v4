@@ -190,12 +190,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Open any installed calendar app at today's date.
-     * Uses the generic CalendarContract URI which any calendar app can handle —
-     * Android prompts the user to pick one (Samsung, Google, etc.) the first time
-     * and remembers the choice.
+     * Open calendar app at today's date.
+     *
+     * Behavior depends on FeatureFlags.isArchiveButtonEnabled:
+     *   - OFF (default, Build #42 behavior): time URI → system chooser (Google/Samsung/Outlook)
+     *   - ON: open CalendarArchive directly. If unavailable, fall back to default behavior.
      */
     private fun openSamsungCalendar() {
+        // Check feature flag — if ON, try CalendarArchive first
+        if (FeatureFlags.isArchiveButtonEnabled(this)) {
+            if (tryOpenCalendarArchive()) {
+                Log.d(TAG, "openSamsungCalendar: opened CalendarArchive (flag ON)")
+                return
+            }
+            Log.d(TAG, "openSamsungCalendar: CalendarArchive unavailable, falling back to default")
+            // Fall through to default behavior
+        }
+
+        // Default behavior (Build #42)
         val now = System.currentTimeMillis()
         val timeUri = Uri.parse("content://com.android.calendar/time/$now")
 
@@ -230,6 +242,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         Toast.makeText(this, "تعذّر فتح تطبيق التقويم", Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * Try to launch CalendarArchive app.
+     * @return true if launched successfully, false if app is missing/disabled or launch failed.
+     */
+    private fun tryOpenCalendarArchive(): Boolean {
+        val archivePackage = "com.alaimtiaz.calendararchive"
+        return try {
+            val launcher = packageManager.getLaunchIntentForPackage(archivePackage)
+            if (launcher != null) {
+                launcher.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                startActivity(launcher)
+                true
+            } else {
+                Log.d(TAG, "tryOpenCalendarArchive: package $archivePackage not found")
+                false
+            }
+        } catch (ex: Exception) {
+            Log.w(TAG, "tryOpenCalendarArchive: launch failed", ex)
+            false
+        }
     }
 
     companion object {
