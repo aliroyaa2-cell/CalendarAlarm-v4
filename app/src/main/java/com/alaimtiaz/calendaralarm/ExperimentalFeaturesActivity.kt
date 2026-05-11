@@ -15,7 +15,8 @@ import androidx.appcompat.app.AppCompatActivity
  * Displays toggles for experimental features.
  * All flags default to OFF — app behaves like stable Build #42.
  *
- * Phase B: First real toggle — CalendarArchive button override.
+ * Phase B: CalendarArchive button override.
+ * Phase Y2: New alarm overlay design.
  */
 class ExperimentalFeaturesActivity : AppCompatActivity() {
 
@@ -37,7 +38,7 @@ class ExperimentalFeaturesActivity : AppCompatActivity() {
     }
 
     private fun renderToggles() {
-        // Hide empty state — we have at least one toggle
+        // Hide empty state — we have toggles now
         tvEmpty.visibility = View.GONE
 
         // Toggle 1: Archive button override
@@ -48,6 +49,18 @@ class ExperimentalFeaturesActivity : AppCompatActivity() {
             isChecked = FeatureFlags.isArchiveButtonEnabled(this),
             onChange = { enabled ->
                 FeatureFlags.setArchiveButtonEnabled(this, enabled)
+            }
+        )
+
+        // Toggle 2: New alarm overlay design
+        addToggle(
+            title = "تصميم شاشة المنبه الجديد",
+            description = "إطار أزرق حول الحدث + أزرار تأجيل ملوّنة (5/15/30/60 دقيقة) " +
+                    "+ خيارات تأجيل أطول (حتى أسبوع) + بدون ساعة.\n" +
+                    "لو شي ما عجبك، عطّل التبديل ويرجع التصميم الأصلي فوراً.",
+            isChecked = FeatureFlags.isNewAlarmOverlayEnabled(this),
+            onChange = { enabled ->
+                FeatureFlags.setNewAlarmOverlayEnabled(this, enabled)
             }
         )
     }
