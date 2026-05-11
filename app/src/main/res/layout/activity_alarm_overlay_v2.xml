@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Spacer top -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="32dp" />
+
+        <!-- Event card with blue border -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:layout_marginBottom="24dp"
+            android:background="@drawable/alarm_v2_event_card_bg">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="10dp"
+                android:text="منبه" />
+
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:lineSpacingMultiplier="1.3"
+                android:text="" />
+
+            <!-- Location (visible only when event has one) -->
+            <TextView
+                android:id="@+id/tvLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:textColor="#D0D0D0"
+                android:textSize="14sp"
+                android:visibility="gone"
+                android:text="" />
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="12dp"
+                android:background="#2D2D2D" />
+
+            <!-- Event time -->
+            <TextView
+                android:id="@+id/tvEventTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#D0D0D0"
+                android:textSize="14sp"
+                android:text="" />
+
+        </LinearLayout>
+
+        <!-- Quick snooze label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#9CA3AF"
+            android:textSize="12sp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginStart="2dp"
+            android:text="تأجيل سريع" />
+
+        <!-- Snooze grid row 1: 5 min (green) | 15 min (purple) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp">
+
+            <LinearLayout
+                android:id="@+id/btnSnooze5"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="72dp"
+                android:layout_marginEnd="6dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/alarm_v2_btn_green"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#064E3B"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:text="5" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#064E3B"
+                    android:textSize="11sp"
+                    android:text="دقائق" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btnSnooze15"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="72dp"
+                android:layout_marginStart="6dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/alarm_v2_btn_purple"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#3B0764"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:text="15" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#3B0764"
+                    android:textSize="11sp"
+                    android:text="دقيقة" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Snooze grid row 2: 30 min (amber) | 60 min (blue) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:id="@+id/btnSnooze30"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="72dp"
+                android:layout_marginEnd="6dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/alarm_v2_btn_amber"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#451A03"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:text="30" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#451A03"
+                    android:textSize="11sp"
+                    android:text="دقيقة" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btnSnooze60"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="72dp"
+                android:layout_marginStart="6dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/alarm_v2_btn_blue"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:text="60" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:text="دقيقة" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Snooze more button (teal) -->
+        <LinearLayout
+            android:id="@+id/btnSnoozeMore"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/alarm_v2_btn_teal"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:text="تأجيل أطول" />
+
+        </LinearLayout>
+
+        <!-- Bottom: open event (outline) | dismiss (red, smaller) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEdit"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="52dp"
+                android:layout_marginEnd="6dp"
+                android:textColor="#D1D5DB"
+                android:textSize="13sp"
+                app:strokeColor="#4B5563"
+                app:strokeWidth="1dp"
+                app:cornerRadius="14dp"
+                android:text="@string/alarm_action_edit" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDismiss"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="52dp"
+                android:layout_marginStart="6dp"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="#DC2626"
+                app:cornerRadius="14dp"
+                android:text="@string/alarm_action_dismiss" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
