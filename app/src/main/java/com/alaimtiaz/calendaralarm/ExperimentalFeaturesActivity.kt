@@ -1,13 +1,13 @@
 package com.alaimtiaz.calendaralarm
 
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.view.Gravity
 import android.view.View
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.Switch
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SwitchCompat
 
 /**
  * Experimental Features Screen
@@ -37,7 +37,7 @@ class ExperimentalFeaturesActivity : AppCompatActivity() {
     }
 
     private fun renderToggles() {
-        // Hide empty state — we have at least one toggle now
+        // Hide empty state — we have at least one toggle
         tvEmpty.visibility = View.GONE
 
         // Toggle 1: Archive button override
@@ -54,6 +54,7 @@ class ExperimentalFeaturesActivity : AppCompatActivity() {
 
     /**
      * Add a single toggle row to the container.
+     * Uses plain android.widget.Switch (not SwitchCompat) for theme stability.
      */
     private fun addToggle(
         title: String,
@@ -61,25 +62,21 @@ class ExperimentalFeaturesActivity : AppCompatActivity() {
         isChecked: Boolean,
         onChange: (Boolean) -> Unit
     ) {
-        val row = LayoutInflater.from(this).inflate(
-            android.R.layout.simple_list_item_2,
-            togglesContainer,
-            false
-        ) as LinearLayout
-
-        // Build a custom row programmatically (simpler than another XML file)
-        val customRow = LinearLayout(this).apply {
+        // Container row
+        val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                setMargins(0, 0, 0, dp(16))
+                setMargins(0, 0, 0, dp(12))
             }
             setPadding(dp(12), dp(12), dp(12), dp(12))
             setBackgroundColor(0xFF1F1F1F.toInt())
         }
 
+        // Texts container (left side, takes remaining space)
         val textsContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
@@ -93,41 +90,41 @@ class ExperimentalFeaturesActivity : AppCompatActivity() {
             text = title
             textSize = 15f
             setTextColor(0xFFFFFFFF.toInt())
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
         }
 
         val descView = TextView(this).apply {
             text = description
             textSize = 12f
             setTextColor(0xFFBDBDBD.toInt())
-            val lp = LinearLayout.LayoutParams(
+            layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(4) }
-            layoutParams = lp
-        }
-
-        val switchView = SwitchCompat(this).apply {
-            this.isChecked = isChecked
-            setOnCheckedChangeListener { _, checked ->
-                onChange(checked)
-            }
-            val lp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                marginStart = dp(12)
+                topMargin = dp(4)
             }
-            layoutParams = lp
         }
 
         textsContainer.addView(titleView)
         textsContainer.addView(descView)
-        customRow.addView(textsContainer)
-        customRow.addView(switchView)
 
-        togglesContainer.addView(customRow)
+        // Plain Switch (right side) — uses platform theme, no AppCompat dependency
+        val switchView = Switch(this).apply {
+            this.isChecked = isChecked
+            setOnCheckedChangeListener { _, checked ->
+                onChange(checked)
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = dp(12)
+            }
+        }
+
+        row.addView(textsContainer)
+        row.addView(switchView)
+
+        togglesContainer.addView(row)
     }
 
     private fun dp(value: Int): Int {
