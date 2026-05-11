@@ -22,9 +22,10 @@ import android.provider.CalendarContract
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
 import androidx.lifecycle.lifecycleScope
 import com.alaimtiaz.calendaralarm.alarm.AlarmScheduler
 import com.alaimtiaz.calendaralarm.data.AppDatabase
@@ -32,6 +33,7 @@ import com.alaimtiaz.calendaralarm.data.EventEntity
 import com.alaimtiaz.calendaralarm.databinding.ActivityAlarmOverlayBinding
 import com.alaimtiaz.calendaralarm.util.DateUtils
 import com.alaimtiaz.calendaralarm.util.PreferencesHelper
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,7 +44,21 @@ import java.util.Locale
 
 class AlarmOverlayActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityAlarmOverlayBinding
+    // Original binding (used only when v1 layout is active)
+    private var binding: ActivityAlarmOverlayBinding? = null
+
+    // v2 views (used only when v2 layout is active)
+    private var v2TvTitle: TextView? = null
+    private var v2TvLocation: TextView? = null
+    private var v2TvEventTime: TextView? = null
+    private var v2BtnSnooze5: LinearLayout? = null
+    private var v2BtnSnooze15: LinearLayout? = null
+    private var v2BtnSnooze30: LinearLayout? = null
+    private var v2BtnSnooze60: LinearLayout? = null
+    private var v2BtnSnoozeMore: LinearLayout? = null
+    private var v2BtnEdit: MaterialButton? = null
+    private var v2BtnDismiss: MaterialButton? = null
+
     private lateinit var prefs: PreferencesHelper
     private val handler = Handler(Looper.getMainLooper())
     private var wakeLock: PowerManager.WakeLock? = null
@@ -55,15 +71,26 @@ class AlarmOverlayActivity : AppCompatActivity() {
     private var phase2Runnable: Runnable? = null
     private val clockFormat = SimpleDateFormat("h:mm:ss", Locale("ar"))
     private val ampmFormat = SimpleDateFormat("a", Locale("ar"))
+    private var useNewLayout: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applyPhase1WindowFlags()
 
-        binding = ActivityAlarmOverlayBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
         prefs = PreferencesHelper(applicationContext)
+
+        // Decide which layout to use based on feature flag
+        useNewLayout = FeatureFlags.isNewAlarmOverlayEnabled(this)
+        Log.d(TAG, "onCreate: useNewLayout=$useNewLayout")
+
+        if (useNewLayout) {
+            setContentView(R.layout.activity_alarm_overlay_v2)
+            bindV2Views()
+        } else {
+            binding = ActivityAlarmOverlayBinding.inflate(layoutInflater)
+            setContentView(binding!!.root)
+        }
+
         eventId = intent.getLongExtra(EXTRA_EVENT_ID, -1L)
         externalIdHint = intent.getStringExtra(EXTRA_EXTERNAL_ID)
 
@@ -76,12 +103,27 @@ class AlarmOverlayActivity : AppCompatActivity() {
         }
 
         acquireWakeLockPhase1()
-        scheduleClockTicks()
+        if (!useNewLayout) {
+            scheduleClockTicks()
+        }
         loadEvent()
         playAlarmSoundOnce()
         startShortVibration()
         wireButtons()
         scheduleEnterPhase2()
+    }
+
+    private fun bindV2Views() {
+        v2TvTitle = findViewById(R.id.tvTitle)
+        v2TvLocation = findViewById(R.id.tvLocation)
+        v2TvEventTime = findViewById(R.id.tvEventTime)
+        v2BtnSnooze5 = findViewById(R.id.btnSnooze5)
+        v2BtnSnooze15 = findViewById(R.id.btnSnooze15)
+        v2BtnSnooze30 = findViewById(R.id.btnSnooze30)
+        v2BtnSnooze60 = findViewById(R.id.btnSnooze60)
+        v2BtnSnoozeMore = findViewById(R.id.btnSnoozeMore)
+        v2BtnEdit = findViewById(R.id.btnEdit)
+        v2BtnDismiss = findViewById(R.id.btnDismiss)
     }
 
     private fun applyPhase1WindowFlags() {
@@ -162,21 +204,28 @@ class AlarmOverlayActivity : AppCompatActivity() {
             }
             event = e
             renderEvent(e)
-            // Show the persistent notification after the event has loaded so we
-            // can use the real event title (or fallback if null).
             showPersistentNotification(e)
         }
     }
 
     private fun renderEvent(e: EventEntity?) {
+        if (useNewLayout) {
+            renderEventV2(e)
+        } else {
+            renderEventV1(e)
+        }
+    }
+
+    private fun renderEventV1(e: EventEntity?) {
+        val b = binding ?: return
         if (e == null) {
-            binding.tvTitle.text = "(تعذّر تحميل الحدث)"
-            binding.tvSourceName.text = ""
-            binding.tvDescription.visibility = View.GONE
-            binding.tvLocation.visibility = View.GONE
+            b.tvTitle.text = "(تعذّر تحميل الحدث)"
+            b.tvSourceName.text = ""
+            b.tvDescription.visibility = View.GONE
+            b.tvLocation.visibility = View.GONE
             return
         }
-        binding.tvTitle.text = e.title
+        b.tvTitle.text = e.title
 
         val sourceLabel = when (e.source) {
             EventEntity.SOURCE_GOOGLE -> "📅 Google"
@@ -184,43 +233,102 @@ class AlarmOverlayActivity : AppCompatActivity() {
             EventEntity.SOURCE_OUTLOOK -> "📧 Outlook"
             else -> "📋 ${e.source}"
         }
-        binding.tvSourceName.text = "$sourceLabel • ${e.accountName}"
-        binding.tvEventTime.text = DateUtils.formatFull(this, e.startTime)
+        b.tvSourceName.text = "$sourceLabel • ${e.accountName}"
+        b.tvEventTime.text = DateUtils.formatFull(this, e.startTime)
 
         if (!e.description.isNullOrBlank()) {
-            binding.tvDescription.visibility = View.VISIBLE
-            binding.tvDescription.text = e.description
-        } else binding.tvDescription.visibility = View.GONE
+            b.tvDescription.visibility = View.VISIBLE
+            b.tvDescription.text = e.description
+        } else b.tvDescription.visibility = View.GONE
 
         if (!e.location.isNullOrBlank()) {
-            binding.tvLocation.visibility = View.VISIBLE
-            binding.tvLocation.text = "📍 ${e.location}"
-        } else binding.tvLocation.visibility = View.GONE
+            b.tvLocation.visibility = View.VISIBLE
+            b.tvLocation.text = "📍 ${e.location}"
+        } else b.tvLocation.visibility = View.GONE
+    }
+
+    private fun renderEventV2(e: EventEntity?) {
+        if (e == null) {
+            v2TvTitle?.text = "(تعذّر تحميل الحدث)"
+            v2TvEventTime?.text = ""
+            v2TvLocation?.visibility = View.GONE
+            return
+        }
+
+        v2TvTitle?.text = e.title
+        v2TvEventTime?.text = DateUtils.formatFull(this, e.startTime)
+
+        if (!e.location.isNullOrBlank()) {
+            v2TvLocation?.visibility = View.VISIBLE
+            v2TvLocation?.text = "📍 ${e.location}"
+        } else {
+            v2TvLocation?.visibility = View.GONE
+        }
     }
 
     private fun wireButtons() {
-        binding.btnDismiss.setOnClickListener { dismissAlarm() }
-        binding.btnEdit.setOnClickListener { openInCalendar() }
-        binding.btnSnooze5.setOnClickListener { snooze(5L) }
-        binding.btnSnooze10.setOnClickListener { snooze(10L) }
-        binding.btnSnooze30.setOnClickListener { snooze(30L) }
-        binding.btnSnoozeMore.setOnClickListener { showSnoozeMoreDialog() }
+        if (useNewLayout) {
+            wireButtonsV2()
+        } else {
+            wireButtonsV1()
+        }
+    }
+
+    private fun wireButtonsV1() {
+        val b = binding ?: return
+        b.btnDismiss.setOnClickListener { dismissAlarm() }
+        b.btnEdit.setOnClickListener { openInCalendar() }
+        b.btnSnooze5.setOnClickListener { snooze(5L) }
+        b.btnSnooze10.setOnClickListener { snooze(10L) }
+        b.btnSnooze30.setOnClickListener { snooze(30L) }
+        b.btnSnoozeMore.setOnClickListener { showSnoozeMoreDialog() }
+    }
+
+    private fun wireButtonsV2() {
+        v2BtnDismiss?.setOnClickListener { dismissAlarm() }
+        v2BtnEdit?.setOnClickListener { openInCalendar() }
+        v2BtnSnooze5?.setOnClickListener { snooze(5L) }
+        v2BtnSnooze15?.setOnClickListener { snooze(15L) }
+        v2BtnSnooze30?.setOnClickListener { snooze(30L) }
+        v2BtnSnooze60?.setOnClickListener { snooze(60L) }
+        v2BtnSnoozeMore?.setOnClickListener { showSnoozeMoreDialog() }
     }
 
     private fun showSnoozeMoreDialog() {
-        val labels = arrayOf(
-            getString(R.string.alarm_snooze_2h),
-            getString(R.string.alarm_snooze_4h),
-            getString(R.string.alarm_snooze_8h),
-            getString(R.string.alarm_snooze_1d),
-            getString(R.string.alarm_snooze_1w)
-        )
-        val minutes = longArrayOf(120L, 240L, 480L, 1440L, 10080L)
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.alarm_snooze_more)
-            .setItems(labels) { _, which -> snooze(minutes[which]) }
-            .setNegativeButton(R.string.action_cancel, null)
-            .show()
+        if (useNewLayout) {
+            // v2: 8 options
+            val labels = arrayOf(
+                getString(R.string.alarm_snooze_2h),
+                getString(R.string.alarm_snooze_4h),
+                getString(R.string.alarm_snooze_8h),
+                "12 ساعة",
+                getString(R.string.alarm_snooze_1d),
+                "يومان",
+                "3 أيام",
+                getString(R.string.alarm_snooze_1w)
+            )
+            val minutes = longArrayOf(120L, 240L, 480L, 720L, 1440L, 2880L, 4320L, 10080L)
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.alarm_snooze_more)
+                .setItems(labels) { _, which -> snooze(minutes[which]) }
+                .setNegativeButton(R.string.action_cancel, null)
+                .show()
+        } else {
+            // v1: original 5 options
+            val labels = arrayOf(
+                getString(R.string.alarm_snooze_2h),
+                getString(R.string.alarm_snooze_4h),
+                getString(R.string.alarm_snooze_8h),
+                getString(R.string.alarm_snooze_1d),
+                getString(R.string.alarm_snooze_1w)
+            )
+            val minutes = longArrayOf(120L, 240L, 480L, 1440L, 10080L)
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.alarm_snooze_more)
+                .setItems(labels) { _, which -> snooze(minutes[which]) }
+                .setNegativeButton(R.string.action_cancel, null)
+                .show()
+        }
     }
 
     private fun snooze(minutes: Long) {
@@ -252,16 +360,8 @@ class AlarmOverlayActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Open the event in its native calendar app.
-     * Simple, trust-the-system approach (matches what worked in previous versions).
-     *
-     * Note: We do NOT dismiss the persistent notification here — the user may
-     * want to view in Google Calendar then come back and snooze/dismiss.
-     */
     private fun openInCalendar() {
         val e = event
-        // Extract the native calendar event ID (strip recurrence suffix if any)
         val externalEventIdLong = e?.externalId?.substringBefore("_")?.toLongOrNull()
 
         try {
@@ -283,7 +383,6 @@ class AlarmOverlayActivity : AppCompatActivity() {
             Log.w(TAG, "openInCalendar: ACTION_VIEW failed", ex)
         }
 
-        // Fallback: open Google Calendar app's launcher
         try {
             val launcher = packageManager.getLaunchIntentForPackage("com.google.android.calendar")
             if (launcher != null) {
@@ -301,22 +400,10 @@ class AlarmOverlayActivity : AppCompatActivity() {
         Toast.makeText(this, "تعذّر فتح تطبيق التقويم", Toast.LENGTH_SHORT).show()
     }
 
-    /**
-     * Show a persistent (ongoing) notification in the notification shade.
-     * This notification:
-     *  - cannot be swiped away by the user
-     *  - shows a badge on the app icon
-     *  - re-launches AlarmOverlayActivity when tapped
-     *  - is removed only when user interacts with the alarm (Snooze or Dismiss)
-     *
-     * Purpose: ensure the user never misses an alarm even if AlarmOverlayActivity
-     * gets killed by Samsung's task killer or overridden by Samsung Alarm clock.
-     */
     private fun showPersistentNotification(e: EventEntity?) {
         val notificationId = if (eventId > 0L) eventId.toInt() else NOTIFICATION_ID_FALLBACK
         val title = e?.title?.takeIf { it.isNotBlank() } ?: "منبه نشط"
 
-        // Tapping the notification re-opens this same alarm screen
         val openIntent = Intent(this, AlarmOverlayActivity::class.java).apply {
             putExtra(EXTRA_EVENT_ID, eventId)
             externalIdHint?.let { putExtra(EXTRA_EXTERNAL_ID, it) }
@@ -333,7 +420,7 @@ class AlarmOverlayActivity : AppCompatActivity() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(
+        val notification = androidx.core.app.NotificationCompat.Builder(
             this,
             CalendarAlarmApplication.CHANNEL_MISSED_ALARMS
         )
@@ -343,9 +430,9 @@ class AlarmOverlayActivity : AppCompatActivity() {
             .setOngoing(true)
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setCategory(NotificationCompat.CATEGORY_REMINDER)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
+            .setCategory(androidx.core.app.NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(openPi)
             .setNumber(1)
             .build()
@@ -359,10 +446,6 @@ class AlarmOverlayActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Remove the persistent notification associated with this alarm.
-     * Called only when the user has truly interacted (Snooze or Dismiss).
-     */
     private fun dismissPersistentNotification() {
         val notificationId = if (eventId > 0L) eventId.toInt() else NOTIFICATION_ID_FALLBACK
         try {
@@ -437,11 +520,13 @@ class AlarmOverlayActivity : AppCompatActivity() {
     }
 
     private fun scheduleClockTicks() {
+        // v1 only — v2 has no live clock
+        val b = binding ?: return
         clockTickRunnable = object : Runnable {
             override fun run() {
                 val now = Date()
-                binding.tvClock.text = clockFormat.format(now)
-                binding.tvClockAmpm.text = ampmFormat.format(now)
+                b.tvClock.text = clockFormat.format(now)
+                b.tvClockAmpm.text = ampmFormat.format(now)
                 handler.postDelayed(this, 1000L)
             }
         }
@@ -461,7 +546,6 @@ class AlarmOverlayActivity : AppCompatActivity() {
         private const val TAG = "AlarmOverlay"
         const val EXTRA_EVENT_ID = "extra_event_id"
         const val EXTRA_EXTERNAL_ID = "extra_external_id"
-        // Used only when eventId is negative (which shouldn't happen, but be safe)
         private const val NOTIFICATION_ID_FALLBACK = 99999
     }
 }
