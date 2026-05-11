@@ -16,6 +16,7 @@ object FeatureFlags {
 
     // ━━━ Flag keys ━━━
     private const val KEY_ARCHIVE_BUTTON = "flag_archive_button_enabled"
+    private const val KEY_NEW_ALARM_OVERLAY = "flag_new_alarm_overlay_enabled"
 
     private fun prefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -33,5 +34,18 @@ object FeatureFlags {
 
     fun setArchiveButtonEnabled(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_ARCHIVE_BUTTON, enabled).apply()
+    }
+
+    /**
+     * Use new alarm overlay design (colored snooze buttons + blue card border +
+     * expanded "snooze more" dialog + removed live clock).
+     * Default: OFF (Build #42 original overlay).
+     */
+    fun isNewAlarmOverlayEnabled(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_NEW_ALARM_OVERLAY, false)
+    }
+
+    fun setNewAlarmOverlayEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_NEW_ALARM_OVERLAY, enabled).apply()
     }
 }
