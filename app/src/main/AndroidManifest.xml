@@ -44,6 +44,19 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- ━━━━━━━━━━ Package Visibility (Android 11+) ━━━━━━━━━━ -->
+    <!-- Required so getLaunchIntentForPackage() can find these apps -->
+    <queries>
+        <package android:name="com.alaimtiaz.calendararchive" />
+        <package android:name="com.samsung.android.calendar" />
+        <package android:name="com.google.android.calendar" />
+        <package android:name="com.microsoft.office.outlook" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="content" android:host="com.android.calendar" />
+        </intent>
+    </queries>
+
     <application
         android:name=".CalendarAlarmApplication"
         android:allowBackup="true"
